@@ -1,46 +1,71 @@
+from datetime import date, datetime
 import sqlite3
 from sqlite3 import Error
 
 
-def create_connection(db_file):
+def Create_Connection(Dbfile):
     """ create a database connection to the SQLite database
-        specified by the db_file
+        specified by db_file
     :param db_file: database file
     :return: Connection object or None
     """
-    conn = None
+    Conn = None
     try:
-        conn = sqlite3.connect(db_file)
+        Conn = sqlite3.connect(Dbfile)
     except Error as e:
         print(e)
 
-    return conn
+    return Conn
 
-
-def update_task(conn, task):
+def Create_Table(Conn, Create_Table_Sql):
+    """ create a table from the create_table_sql statement
+    :param conn: Connection object
+    :param create_table_sql: a CREATE TABLE statement
+    :return:
     """
-    update priority, begin_date, and end date of a task
-    :param conn:
-    :param task:
+    try:
+        c = Conn.cursor()
+        c.execute(Create_Table_Sql)
+    except Error as e:
+        print(e)
+
+
+def Insert_GpsData(Conn, GpsData):
+    """
+    Insert new GpsData into the GpsData table
+    :param Conn:
+    :param GpsData:
     :return: project id
     """
-    sql = ''' UPDATE tasks
-              SET priority = ? ,
-                  begin_date = ? ,
-                  end_date = ?
-              WHERE id = ?'''
-    cur = conn.cursor()
-    cur.execute(sql, task)
-    conn.commit()
+    Sql = ''' INSERT INTO GpsData(GpsDateTime,Lat,Long,Speed)
+              VALUES(?,?,?,?) '''
+    Cur = Conn.cursor()
+    Cur.execute(Sql, GpsData)
+    Conn.commit()
+    return Cur.lastrowid
+
 
 
 def main():
-    database = r".\db\pythonsqlite.db"
+    Database = r".\db\sensornodedb.db"
+
+    sql_create_GpsData_table = """ CREATE TABLE IF NOT EXISTS GpsData (
+                                        GpsDateTime text PRIMARY KEY,
+                                        Lat real NOT NULL,
+                                        Long real NOT NULL,
+                                        Speed real
+                                    ); """
 
     # create a database connection
-    conn = create_connection(database)
-    with conn:
-        update_task(conn, (2, '2015-01-04', '2015-01-06', 2))
+    Conn = Create_Connection(Database)
+    with Conn:
+        # create GpsData table
+        Create_Table(Conn,sql_create_GpsData_table)
+        # insert GPS data
+        GpsData = (str(datetime.now()), 100.001, 102.002,24.2)
+        Insert_GpsData(Conn, GpsData)
+
+        
 
 
 if __name__ == '__main__':
